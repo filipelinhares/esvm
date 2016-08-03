@@ -1,0 +1,98 @@
+#!/bin/bash
+
+ESVM_PATH="$HOME/.esvm"
+ESVM_VERSION="0.1.0"
+
+download() {
+  echo "Downloading Elasticsearch ${1}"
+  curl --progress-bar -o $ESVM_PATH/$1/elasticsearch-$1.tar.gz https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/$1/elasticsearch-$1.tar.gz
+}
+
+check_directory() {
+  if [ ! -e $ESVM_PATH/$1 ]; then
+    mkdir -p $ESVM_PATH/$1
+  fi
+}
+
+check_version() {
+  if [ ! -e $ESVM_PATH/$1 ]; then
+    echo "Version ${1} is not installed"
+    echo "Use esvm --install ${1}"
+    exit 1
+  fi
+}
+
+unpack() {
+  tar -xf $ESVM_PATH/$1/elasticsearch-$1.tar.gz -C $ESVM_PATH/$1 2> /dev/null & indicator $! "Unpacking"
+}
+
+sym_link() {
+  ln -s $ESVM_PATH/$1/elasticsearch-$1/bin/elasticsearch /usr/local/bin/elasticsearch 2> /dev/null & indicator $! "Activating installed version"
+}
+
+sym_unlink() {
+  rm -rf /usr/local/bin/elasticsearch
+}
+
+cleaning() {
+  rm -rf $ESVM_PATH/$1/*.tar.gz & indicator $! "Cleaning!"
+}
+
+indicator() {
+  pid=$1
+  spin='⢄⢂⢁⡁⡈⡐⡠'
+
+  i=0
+  while kill -0 $pid 2>/dev/null
+  do
+    i=$(( (i+1) %4 ))
+    printf "\r${spin:$i:1} ${2}"
+    sleep .1
+  done
+}
+
+install() {
+  check_directory $1
+  download $1
+  unpack $1
+  cleaning $1
+}
+
+use() {
+  check_version $1
+  sym_unlink $1
+  sym_link $1
+  exit
+}
+
+
+display_help() {
+  cat <<-EOF
+  Elasticsearch version manager
+
+  Usage: esvm [Commands] [options]
+
+  Commands:
+    install        Install a new version
+    use            Active a installed version
+  Options:
+    -V, --version   Output current version of n
+    -h, --help      Display help information
+EOF
+}
+
+display_version() {
+  echo "esvm: ${ESVM_VERSION}"
+}
+
+while test $# -ne 0; do
+case $1 in
+    -v|--version) display_version; exit ;;
+    -h|--help) display_help; exit ;;
+    use) use $2 ;;
+    install) install $2 ;;
+    *) show_help; exit ;;
+esac
+done
+
+
