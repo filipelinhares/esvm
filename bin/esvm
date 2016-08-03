@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ESVM_PATH="$HOME/.esvm"
-ESVM_VERSION="0.1.0"
+ESVM_VERSION="0.2.0"
 
 download() {
   echo "Downloading Elasticsearch ${1}"
@@ -14,11 +14,18 @@ check_directory() {
   fi
 }
 
-check_version() {
+check_use_version() {
   if [ ! -e $ESVM_PATH/$1 ]; then
     echo "Version ${1} is not installed"
     echo "Use esvm --install ${1}"
-    exit 1
+    exit
+  fi
+}
+
+check_install_version() {
+  if [ -e $ESVM_PATH/$1/elasticsearch-$1 ]; then
+    echo "Version ${1} already installed"
+    exit
   fi
 }
 
@@ -53,18 +60,19 @@ indicator() {
 
 install() {
   check_directory $1
+  check_install_version $1
   download $1
   unpack $1
   cleaning $1
+  exit
 }
 
 use() {
-  check_version $1
+  check_use_version $1
   sym_unlink $1
   sym_link $1
   exit
 }
-
 
 display_help() {
   cat <<-EOF
