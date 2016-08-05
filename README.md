@@ -1,5 +1,9 @@
-# Elasticsearch version manager
+# esvm
 A simple script to install and configure elasticsearch.
+
+[![GitHub tag](https://img.shields.io/github/tag/filipelinhares/esvm.svg?maxAge=2592000)](https://github.com/filipelinhares/esvm/releases)
+[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
+
 
 > :warning: Just tested on Ubuntu
 
@@ -27,6 +31,11 @@ make cleanup
 esvm install 2.3.4
 ```
 
+**Uninstall**
+```
+esvm uninstall 2.3.4
+```
+
 **Use**
 ```
 esvm use 2.3.4
@@ -50,6 +59,3 @@ Maybe you will need to change the permission of this folder or use `sudo` before
 
 - [ ] Improve messages
 - [ ] Improve this README
-
-## License
-[MIT](LICENSE.md) © Filipe Linhares
