@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ESVM_PATH="$HOME/.esvm"
-ESVM_VERSION="0.2.0"
+ESVM_VERSION="0.3.0"
 
 download() {
   echo "Downloading Elasticsearch ${1}"
@@ -14,17 +14,17 @@ check_directory() {
   fi
 }
 
-check_use_version() {
-  if [ ! -e $ESVM_PATH/$1 ]; then
-    echo "Version ${1} is not installed"
-    echo "Use esvm --install ${1}"
+check_version_installed() {
+  if [ -e $ESVM_PATH/$1/elasticsearch-$1 ]; then
+    echo "Version ${1} already installed"
     exit
   fi
 }
 
-check_install_version() {
-  if [ -e $ESVM_PATH/$1/elasticsearch-$1 ]; then
-    echo "Version ${1} already installed"
+check_version_exist() {
+  if [ ! -e $ESVM_PATH/$1 ]; then
+    echo "Version ${1} is not installed"
+    echo "Use esvm install ${1}"
     exit
   fi
 }
@@ -52,6 +52,10 @@ cleaning() {
   rm -rf $ESVM_PATH/$1/*.tar.gz & indicator $! "Cleaning!"
 }
 
+delete_version_dir() {
+  rm -rf ~/.esvm/$1 & indicator $! "Uninstalling"
+}
+
 indicator() {
   pid=$1
   spin='⢄⢂⢁⡁⡈⡐⡠'
@@ -68,22 +72,31 @@ indicator() {
 install() {
   check_arguments $1
   check_directory $1
-  check_install_version $1
+  check_version_installed $1
   download $1
   unpack $1
   cleaning $1
   exit
 }
 
+uninstall() {
+  check_arguments $1
+  check_version_exist
+  delete_version_dir $1
+  exit
+}
+
 use() {
   check_arguments $1
-  check_use_version $1
+  check_version_exist $1
   sym_unlink $1
   sym_link $1
   exit
 }
 
 display_help() {
+  echo ${es_installed_dir}
+
   cat <<-EOF
 
   Elasticsearch version manager
@@ -93,6 +106,7 @@ display_help() {
 
   Commands:
     install         Install a new version
+    uninstall       Uninstall a new version
     use             Active a installed version
 
   Options:
@@ -106,7 +120,6 @@ display_version() {
   echo "esvm: ${ESVM_VERSION}"
 }
 
-
 # Check if has at least one argument
 if [ ! $1 ]; then
   display_help
@@ -119,8 +132,8 @@ case $1 in
     -h|--help) display_help; exit ;;
     use) use $2 ;;
     install) install $2 ;;
+    uninstall) uninstall $2 ;;
     *) display_help; exit ;;
 esac
 done
-
 
