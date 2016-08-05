@@ -29,6 +29,13 @@ check_install_version() {
   fi
 }
 
+check_arguments() {
+  if [ ! $1 ]; then
+    display_help
+    exit
+  fi
+}
+
 unpack() {
   tar -xf $ESVM_PATH/$1/elasticsearch-$1.tar.gz -C $ESVM_PATH/$1 2> /dev/null & indicator $! "Unpacking"
 }
@@ -59,6 +66,7 @@ indicator() {
 }
 
 install() {
+  check_arguments $1
   check_directory $1
   check_install_version $1
   download $1
@@ -68,6 +76,7 @@ install() {
 }
 
 use() {
+  check_arguments $1
   check_use_version $1
   sym_unlink $1
   sym_link $1
@@ -76,16 +85,20 @@ use() {
 
 display_help() {
   cat <<-EOF
+
   Elasticsearch version manager
 
-  Usage: esvm [Commands] [options]
+  Usage: esvm [commands] [version]
+  esvm install 2.3.4
 
   Commands:
-    install        Install a new version
-    use            Active a installed version
+    install         Install a new version
+    use             Active a installed version
+
   Options:
-    -V, --version   Output current version of n
+    -v, --version   Output current version of esvm
     -h, --help      Display help information
+
 EOF
 }
 
@@ -93,13 +106,20 @@ display_version() {
   echo "esvm: ${ESVM_VERSION}"
 }
 
+
+# Check if has at least one argument
+if [ ! $1 ]; then
+  display_help
+  exit
+fi
+
 while test $# -ne 0; do
 case $1 in
     -v|--version) display_version; exit ;;
     -h|--help) display_help; exit ;;
     use) use $2 ;;
     install) install $2 ;;
-    *) show_help; exit ;;
+    *) display_help; exit ;;
 esac
 done
 
