@@ -1,10 +1,37 @@
 #!/bin/bash
 
 ESVM_PATH="$HOME/.esvm"
-ESVM_VERSION="0.3.0"
+BIN_PATH="/usr/local/bin"
+ESVM_VERSION="0.4.1"
+
+log() {
+  printf "  \033[36m==>\033[0m $@\n"
+}
+
+abort() {
+  printf "\n  \033[31m==x\033[0m $@\n\n" && exit 1
+}
+
+
+indicator() {
+  pid=$1
+
+  declare -a spin=("[    ]" "[=   ]" "[==  ]" "[=== ]" "[====]" "[ ===]" "[  ==]" "[   =]")
+
+  while kill -0 $pid 2> /dev/null
+  do
+    for i in "${spin[@]}"
+    do
+      printf "\r%s  \033[36m%s\033[0m %s" "$(tput el)" "$i" "$2"
+      sleep 0.2
+    done
+  done
+
+  printf "\r%s  \033[36m==>\033[0m %s" "$(tput el)" "Done"
+}
 
 download() {
-  echo "Downloading Elasticsearch ${1}"
+  log "Downloading elasticsearch-${1}"
   curl --progress-bar -o $ESVM_PATH/$1/elasticsearch-$1.tar.gz https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/$1/elasticsearch-$1.tar.gz
 }
 
@@ -16,22 +43,26 @@ check_directory() {
 
 check_version_installed() {
   if [ -e $ESVM_PATH/$1/elasticsearch-$1 ]; then
-    echo "Version ${1} already installed"
-    exit
+    abort "elasticsearch-${1} already installed"
   fi
 }
 
 check_version_exist() {
   if [ ! -e $ESVM_PATH/$1 ]; then
-    echo "Version ${1} is not installed"
-    echo "Use esvm install ${1}"
-    exit
+    abort "elasticsearch-${1} is not installed"
+    abort "Use: esvm install ${1}"
   fi
 }
 
 check_arguments() {
   if [ ! $1 ]; then
     display_help
+    exit
+  fi
+
+  version="[0-9]+\.[0-9]+\.[0-9]"
+  if [[ ! $1 =~ $version ]]; then
+    abort "elasticsearch-${1} is not a valid version"
     exit
   fi
 }
@@ -41,32 +72,19 @@ unpack() {
 }
 
 sym_link() {
-  ln -s $ESVM_PATH/$1/elasticsearch-$1/bin/elasticsearch /usr/local/bin/elasticsearch 2> /dev/null & indicator $! "Activating installed version"
+  ln -s $ESVM_PATH/$1/elasticsearch-$1/bin/elasticsearch $BIN_PATH/elasticsearch 2> /dev/null & indicator $! "Activating elasticsearch-${1}"
 }
 
 sym_unlink() {
-  rm -rf /usr/local/bin/elasticsearch
+  rm -rf $BIN_PATH/elasticsearch
 }
 
 cleaning() {
-  rm -rf $ESVM_PATH/$1/*.tar.gz & indicator $! "Cleaning!"
+  rm -rf $ESVM_PATH/$1/*.tar.gz & indicator $! "Cleaning"
 }
 
 delete_version_dir() {
-  rm -rf ~/.esvm/$1 & indicator $! "Uninstalling"
-}
-
-indicator() {
-  pid=$1
-  spin='⢄⢂⢁⡁⡈⡐⡠'
-
-  i=0
-  while kill -0 $pid 2>/dev/null
-  do
-    i=$(( (i+1) %4 ))
-    printf "\r${spin:$i:1} ${2}"
-    sleep .1
-  done
+  rm -rf $ESVM_PATH/$1 & indicator $! "Uninstalling"
 }
 
 install() {
@@ -95,29 +113,27 @@ use() {
 }
 
 display_help() {
-  echo ${es_installed_dir}
-
   cat <<-EOF
 
   Elasticsearch version manager
 
   Usage: esvm [commands] [version]
-  esvm install 2.3.4
+  {$}esvm install 2.3.4
 
   Commands:
     install         Install a new version
-    uninstall       Uninstall a new version
-    use             Active a installed version
+    uninstall       Uninstall a selected version
+    use             Active an installed version
 
   Options:
-    -v, --version   Output current version of esvm
+    -v, --version   Display current version
     -h, --help      Display help information
 
 EOF
 }
 
 display_version() {
-  echo "esvm: ${ESVM_VERSION}"
+  printf "esvm: ${ESVM_VERSION}"
 }
 
 # Check if has at least one argument
@@ -127,13 +143,13 @@ if [ ! $1 ]; then
 fi
 
 while test $# -ne 0; do
-case $1 in
+  case $1 in
     -v|--version) display_version; exit ;;
     -h|--help) display_help; exit ;;
     use) use $2 ;;
     install) install $2 ;;
     uninstall) uninstall $2 ;;
     *) display_help; exit ;;
-esac
+  esac
 done
 
