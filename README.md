@@ -46,16 +46,5 @@ esvm use 2.3.4
 esvm --help # display help
 esvm --version # display version
 ```
-
-## :warning: Know issues
-
-**`/usr/local/bin` permission**
-
-Maybe you will need to change the permission of this folder or use `sudo` before `esvm` commands.
-
-> I'm working to fix this, maybe install esvm in another path
-
-## Todo
-
-- [ ] Improve messages
-- [ ] Improve this README
+## License
+[MIT](LICENSE.md) © Filipe Linhares
