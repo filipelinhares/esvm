@@ -2,6 +2,7 @@ PREFIX ?= /usr/local
 
 install: bin/esvm
 	cp $< $(PREFIX)/$<
+	chmod +x $(PREFIX)/bin/esvm
 	mkdir -p $(HOME)/.esvm
 	$(info "esvm installed!")
 
