@@ -11,12 +11,12 @@ A simple script to install and configure elasticsearch.
 ```
 git clone git@github.com:filipelinhares/esvm.git
 cd esvm
-make install
+sudo make install
 ```
 
 **Uninstall**
 ```
-make uninstall
+sudo make uninstall
 ```
 
 **Remove all installed versions**
