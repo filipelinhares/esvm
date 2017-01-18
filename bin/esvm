@@ -73,7 +73,8 @@ unpack() {
 }
 
 sym_link() {
-  ln -s $ESVM_PATH/$1/elasticsearch-$1/bin/elasticsearch $BIN_PATH/elasticsearch 2> /dev/null & indicator $! "Activating elasticsearch-${1}"
+  es_path=`find $ESVM_PATH/$1 -type f -name elasticsearch`
+  ln -s $es_path $BIN_PATH/elasticsearch 2> /dev/null & indicator $! "Activating elasticsearch-${1}"
 }
 
 sym_unlink() {
